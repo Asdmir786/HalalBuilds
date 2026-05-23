@@ -1,0 +1,11 @@
+/.gradle/
+/build/
+/.tools/downloads/
+/.tools/gradle/
+/.tools/jdks/
+!/gradle/wrapper/gradle-wrapper.jar
+!/gradle/wrapper/gradle-wrapper.properties
+*.log
+/.idea/
+/.vscode/
+

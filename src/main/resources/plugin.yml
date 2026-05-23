@@ -1,0 +1,91 @@
+name: HalalBuilds
+version: ${version}
+main: com.halalbuilds.HalalBuildsPlugin
+description: Safe structure save, paste, import, export, and terrain-aware placement workflows.
+api-version: '1.21'
+authors: [asmir]
+website: https://github.com/Asdmir786/HalalBuilds
+softdepend: [FastAsyncWorldEdit, WorldEdit, LuckPerms]
+commands:
+  halalbuilds:
+    description: HalalBuilds command root.
+    aliases: [hb, halalbuild]
+    permission: halalbuilds.use
+    usage: "/halalbuilds <subcommand>"
+permissions:
+  halalbuilds.use:
+    description: Base permission for using HalalBuilds commands.
+    default: op
+  halalbuilds.wand:
+    description: Allows wand access.
+    default: op
+  halalbuilds.save:
+    description: Allows saving selected builds.
+    default: op
+  halalbuilds.copy:
+    description: Allows copying selected builds.
+    default: op
+  halalbuilds.cut:
+    description: Allows cutting selected builds.
+    default: op
+  halalbuilds.paste:
+    description: Allows pasting saved builds and clipboard builds.
+    default: op
+  halalbuilds.preview:
+    description: Allows previewing placements.
+    default: op
+  halalbuilds.confirm:
+    description: Allows confirming or canceling pending operations.
+    default: op
+  halalbuilds.import:
+    description: Allows importing files from the imports folder.
+    default: op
+  halalbuilds.export:
+    description: Allows exporting saved builds.
+    default: op
+  halalbuilds.delete:
+    description: Allows deleting saved builds.
+    default: op
+  halalbuilds.undo:
+    description: Allows undoing latest paste or cut operation.
+    default: op
+  halalbuilds.reload:
+    description: Allows reloading configuration.
+    default: op
+  halalbuilds.protect:
+    description: Reserved for v2 structure protection.
+    default: op
+  halalbuilds.unprotect:
+    description: Reserved for v2 structure protection removal.
+    default: op
+  halalbuilds.protection.info:
+    description: Reserved for v2 structure protection info.
+    default: op
+  halalbuilds.protection.list:
+    description: Reserved for v2 structure protection listing.
+    default: op
+  halalbuilds.protection.admin:
+    description: Reserved for v2 structure protection administration.
+    default: op
+  halalbuilds.admin:
+    description: Grants full administrative access.
+    default: op
+    children:
+      halalbuilds.use: true
+      halalbuilds.wand: true
+      halalbuilds.save: true
+      halalbuilds.copy: true
+      halalbuilds.cut: true
+      halalbuilds.paste: true
+      halalbuilds.preview: true
+      halalbuilds.confirm: true
+      halalbuilds.import: true
+      halalbuilds.export: true
+      halalbuilds.delete: true
+      halalbuilds.undo: true
+      halalbuilds.reload: true
+      halalbuilds.protect: true
+      halalbuilds.unprotect: true
+      halalbuilds.protection.info: true
+      halalbuilds.protection.list: true
+      halalbuilds.protection.admin: true

@@ -1,0 +1,81 @@
+# HalalBuilds configuration
+
+limits:
+  max-selection-volume: 250000
+  max-paste-volume-before-preview: 75000
+  max-terrain-changes-before-confirm: 10000
+  max-foundation-depth: 64
+
+paste:
+  default-mode: smart_foundation
+  paste-air-blocks: true
+  clear-terrain-above-footprint: true
+  require-preview-for-large-pastes: true
+  pending-operation-timeout-seconds: 120
+
+foundation:
+  material: STONE_BRICKS
+  fill-under-footprint: true
+  only-fill-under-non-air-blocks: true
+
+protection:
+  stop-on-denylisted-blocks: true
+  denylisted-blocks:
+    - CHEST
+    - TRAPPED_CHEST
+    - BARREL
+    - SPAWNER
+    - BEDROCK
+    - COMMAND_BLOCK
+    - CHAIN_COMMAND_BLOCK
+    - REPEATING_COMMAND_BLOCK
+    - STRUCTURE_BLOCK
+    - JIGSAW
+    - END_PORTAL_FRAME
+
+structure-protection:
+  enabled: true
+  backend: native
+  auto-protect-pastes: false
+  protect-selection-command-enabled: true
+  region-name-format: "hb_{player}_{name}"
+  block-break: true
+  block-place: true
+  block-explosions: true
+  pistons: true
+  fire-spread: true
+  allow-owner-edit: true
+  allow-members-edit: true
+
+worldguard:
+  enabled: true
+  respect-existing-regions: true
+  allow-worldguard-region-creation: true
+  prefer-worldguard-for-protected-pastes: false
+  region-id-format: "hb_{player}_{name}"
+  default-flags:
+    block-break: deny
+    block-place: deny
+    creeper-explosion: deny
+    other-explosion: deny
+    fire-spread: deny
+
+storage:
+  allow-overwrite: false
+  allowed-import-extensions:
+    - .schem
+
+dependency-check:
+  require-fawe: true
+  disable-plugin-if-missing: true
+
+worlds:
+  mode: allow_all
+  enabled:
+    - world
+    - world_nether
+    - world_the_end
+  disabled: []
+
+messages:
+  prefix: "&a[HalalBuilds]&r "
