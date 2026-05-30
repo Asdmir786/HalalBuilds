@@ -52,7 +52,7 @@ public final class SchematicService {
     public void writeSchematic(Clipboard clipboard, Path path) throws IOException {
         Files.createDirectories(path.getParent());
         try (OutputStream outputStream = Files.newOutputStream(path);
-             var writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(outputStream)) {
+             var writer = BuiltInClipboardFormat.SPONGE_V3_SCHEMATIC.getWriter(outputStream)) {
             writer.write(clipboard);
         }
     }

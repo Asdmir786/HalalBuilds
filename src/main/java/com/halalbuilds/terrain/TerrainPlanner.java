@@ -34,6 +34,7 @@ public final class TerrainPlanner {
         long entityCount = clipboard.getEntities().size();
 
         if (mode == PasteMode.EXACT) {
+            Set<Material> denylisted = scanExactDenylisted(world, clipboard, minimum, config, pasteAirBlocks);
             PlacementSummary summary = new PlacementSummary(
                 dimensions,
                 dimensions.volume(),
@@ -41,10 +42,10 @@ public final class TerrainPlanner {
                 entityCount,
                 0,
                 0,
-                Set.of(),
+                denylisted.stream().map(Material::name).collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new)),
                 previewRequested || (config.requirePreviewForLargePastes() && dimensions.volume() > config.maxPasteVolumeBeforePreview())
             );
-            return new PlacementPlan(dimensions, minimum, maximum, List.of(), List.of(), Set.of(), summary);
+            return new PlacementPlan(dimensions, minimum, maximum, List.of(), List.of(), Set.copyOf(denylisted), summary);
         }
 
         List<BlockVector3> clearBlocks = new ArrayList<>();
@@ -57,24 +58,28 @@ public final class TerrainPlanner {
         for (BlockVector3 point : clipboard.getRegion()) {
             BlockVector3 local = point.subtract(clipboardMinimum);
             var fullBlock = clipboard.getFullBlock(point);
-            if (fullBlock.getBlockType().getMaterial().isAir()) {
-                continue;
-            }
+            boolean schematicAir = fullBlock.getBlockType().getMaterial().isAir();
 
             int worldX = minimum.x() + local.x();
             int worldY = minimum.y() + local.y();
             int worldZ = minimum.z() + local.z();
 
             long columnKey = columnKey(worldX, worldZ);
-            occupiedColumns.add(columnKey);
-            lowestStructureByColumn.merge(columnKey, worldY, Math::min);
+            if (!schematicAir || !config.onlyFillUnderNonAirBlocks()) {
+                occupiedColumns.add(columnKey);
+                lowestStructureByColumn.merge(columnKey, worldY, Math::min);
+            }
+
+            if (schematicAir && !pasteAirBlocks) {
+                continue;
+            }
 
             Block worldBlock = world.getBlockAt(worldX, worldY, worldZ);
             Material material = worldBlock.getType();
             if (!material.isAir()) {
                 if (config.denylistedBlocks().contains(material)) {
                     denylisted.add(material);
-                } else {
+                } else if (config.clearTerrainAboveFootprint() || pasteAirBlocks) {
                     clearBlocks.add(BlockVector3.at(worldX, worldY, worldZ));
                 }
             }
@@ -128,6 +133,22 @@ public final class TerrainPlanner {
             }
         }
         return airBlocks;
+    }
+
+    private Set<Material> scanExactDenylisted(World world, Clipboard clipboard, BlockVector3 minimum, HalalBuildsConfig config, boolean pasteAirBlocks) {
+        Set<Material> denylisted = new HashSet<>();
+        BlockVector3 clipboardMinimum = clipboard.getRegion().getMinimumPoint();
+        for (BlockVector3 point : clipboard.getRegion()) {
+            if (!pasteAirBlocks && clipboard.getFullBlock(point).getBlockType().getMaterial().isAir()) {
+                continue;
+            }
+            BlockVector3 local = point.subtract(clipboardMinimum);
+            Material material = world.getBlockAt(minimum.x() + local.x(), minimum.y() + local.y(), minimum.z() + local.z()).getType();
+            if (config.denylistedBlocks().contains(material)) {
+                denylisted.add(material);
+            }
+        }
+        return denylisted;
     }
 
     private static long columnKey(int x, int z) {

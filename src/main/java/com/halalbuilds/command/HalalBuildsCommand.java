@@ -17,6 +17,7 @@ import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.Region;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -150,7 +152,8 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 ensureWorldEnabled(player);
                 SelectionService.SelectionData selection = requireSelection(player);
                 assertSelectionWithinLimit(selection.dimensions());
-                Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region(), plugin.config().entities().saveEntities());
+                boolean copyEntities = plugin.config().entities().saveEntities();
+                Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region(), copyEntities);
                 Set<Material> denylisted = scanSelectionForDenylisted(selection);
                 if (!denylisted.isEmpty() && plugin.config().stopOnDenylistedBlocks()) {
                     throw new IllegalArgumentException("Cut blocked by denylisted blocks: " + denylisted);
@@ -172,8 +175,11 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 ));
                 try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(selection.world()))) {
                     for (BlockVector3 point : selection.region()) {
-                        editSession.setBlock(point, BukkitAdapter.adapt(Material.AIR.createBlockData()));
+                        editSession.setBlock(point.x(), point.y(), point.z(), BukkitAdapter.adapt(Material.AIR.createBlockData()));
                     }
+                }
+                if (copyEntities) {
+                    removeEntitiesInSelection(selection.world(), selection.region());
                 }
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aCut complete. Your clipboard now holds the selection."));
             }
@@ -182,6 +188,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 Player player = requirePlayer(sender);
                 var pending = plugin.pasteService().getPending(player.getUniqueId(), plugin.config())
                     .orElseThrow(() -> new IllegalArgumentException("You do not have a pending HalalBuilds operation."));
+                ensurePendingWorldEnabled(pending);
                 plugin.pasteService().executePendingPaste(player, pending, plugin.config());
                 plugin.visualPreviewService().clear(player.getUniqueId());
                 var target = pending.targetLocation();
@@ -280,6 +287,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 Rotation rotation = Rotation.fromDegrees(Integer.parseInt(simple.value()));
                 var pending = plugin.pasteService().getPending(player.getUniqueId(), plugin.config())
                     .orElseThrow(() -> new IllegalArgumentException("You do not have a pending paste to rotate. Use /hb paste <name|clipboard> --preview first."));
+                ensurePendingWorldEnabled(pending);
                 var rotated = plugin.pasteService().rotatePendingPaste(player, pending, rotation, plugin.config());
                 plugin.visualPreviewService().show(player, rotated);
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aPending placement rotation set to &f" + rotation.degrees() + "&a degrees."));
@@ -324,6 +332,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
         Player player = requirePlayer(sender);
         var pending = plugin.pasteService().getPending(player.getUniqueId(), plugin.config())
             .orElseThrow(() -> new IllegalArgumentException("You do not have a pending paste to move. Use /hb paste <name|clipboard> --preview first."));
+        ensurePendingWorldEnabled(pending);
         var moved = plugin.pasteService().movePendingPaste(player, pending, move.direction(), move.blocks(), plugin.config());
         plugin.visualPreviewService().show(player, moved);
         sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aPending placement moved &f" + move.direction() + " " + move.blocks() + "&a blocks."));
@@ -350,6 +359,13 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    private void ensurePendingWorldEnabled(com.halalbuilds.model.PendingPasteOperation pending) {
+        var world = pending.targetLocation().getWorld();
+        if (world == null || !plugin.config().worlds().isWorldEnabled(world.getName())) {
+            throw new IllegalArgumentException("HalalBuilds is disabled in the pending placement world.");
+        }
+    }
+
     private SelectionService.SelectionData requireSelection(Player player) throws IncompleteRegionException {
         return plugin.selectionService().getSelection(player);
     }
@@ -370,6 +386,18 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
             }
         }
         return denylisted;
+    }
+
+    private void removeEntitiesInSelection(World world, Region region) {
+        for (org.bukkit.entity.Entity entity : world.getEntities()) {
+            if (entity instanceof Player) {
+                continue;
+            }
+            var location = entity.getLocation();
+            if (region.contains(location.getBlockX(), location.getBlockY(), location.getBlockZ())) {
+                entity.remove();
+            }
+        }
     }
 
     private String previewText(com.halalbuilds.model.PendingPasteOperation pending) {

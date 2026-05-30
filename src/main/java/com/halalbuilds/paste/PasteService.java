@@ -225,7 +225,7 @@ public final class PasteService {
         World world = Objects.requireNonNull(player.getServer().getWorld(snapshot.worldName()), "Undo world is unavailable.");
         Location target = new Location(world, snapshot.targetMinimumPoint().x(), snapshot.targetMinimumPoint().y(), snapshot.targetMinimumPoint().z());
         PlacementPlan exactPlan = terrainPlanner.plan(world, snapshot.clipboard(), target, PasteMode.EXACT, fallbackConfig(), false, true);
-        applyPlan(world, snapshot.clipboard(), target, exactPlan, fallbackConfig(), true, false);
+        applyPlan(world, snapshot.clipboard(), target, exactPlan, fallbackConfig(), true, true);
         undoService.clearUndo(player.getUniqueId());
     }
 
@@ -269,10 +269,10 @@ public final class PasteService {
     private void applyPlan(World world, Clipboard clipboard, Location target, PlacementPlan plan, HalalBuildsConfig config, boolean pasteAirBlocks, boolean pasteEntities) {
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world))) {
             for (BlockVector3 block : plan.blocksToClear()) {
-                editSession.setBlock(block, BukkitAdapter.adapt(Material.AIR.createBlockData()));
+                editSession.setBlock(block.x(), block.y(), block.z(), BukkitAdapter.adapt(Material.AIR.createBlockData()));
             }
             for (BlockVector3 block : plan.foundationBlocks()) {
-                editSession.setBlock(block, BukkitAdapter.adapt(config.foundationMaterial().createBlockData()));
+                editSession.setBlock(block.x(), block.y(), block.z(), BukkitAdapter.adapt(config.foundationMaterial().createBlockData()));
             }
             ClipboardHolder holder = new ClipboardHolder(clipboard);
             Operations.complete(holder.createPaste(editSession)
