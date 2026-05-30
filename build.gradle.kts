@@ -47,6 +47,11 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.withType<Javadoc>().configureEach {
+    options.encoding = "UTF-8"
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+}
+
 tasks.wrapper {
     gradleVersion = "9.5.1"
     distributionType = Wrapper.DistributionType.BIN

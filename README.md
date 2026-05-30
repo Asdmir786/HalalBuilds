@@ -164,6 +164,7 @@ See [COMMANDS_AND_PERMISSIONS.md](COMMANDS_AND_PERMISSIONS.md) for the complete 
 - [GITHUB_RELEASE.md](GITHUB_RELEASE.md) - release title, tag, description, and upload checklist.
 - [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) - final release checklist.
 - [PROJECT_STATUS.md](PROJECT_STATUS.md) - current project status.
+- [ROADMAP.md](ROADMAP.md) - detailed version roadmap and future architecture plan.
 - [REQUIREMENTS.md](REQUIREMENTS.md) - product requirements.
 - [TECHNICAL_PLAN.md](TECHNICAL_PLAN.md) - architecture and algorithms.
 - [TEST_PLAN.md](TEST_PLAN.md) - manual and automated test plan.
