@@ -8,6 +8,8 @@ public record PendingPasteOperation(
     boolean clipboardSource,
     Rotation rotation,
     PasteMode pasteMode,
+    boolean pasteAirBlocks,
+    boolean pasteEntities,
     boolean previewRequested,
     Location targetLocation,
     PlacementSummary summary,
@@ -17,4 +19,3 @@ public record PendingPasteOperation(
         return createdAt.plusSeconds(timeoutSeconds).isBefore(now);
     }
 }
-

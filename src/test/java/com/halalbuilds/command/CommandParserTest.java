@@ -29,6 +29,22 @@ class CommandParserTest {
     }
 
     @Test
+    void parsesPasteAirAndEntityFlags() {
+        CommandParseResult result = parser.parse(new String[]{"paste", "house", "--ignore-air", "--no-entities"});
+        CommandParseResult.Paste paste = assertInstanceOf(CommandParseResult.Paste.class, result);
+        assertEquals(false, paste.pasteAirBlocks());
+        assertEquals(false, paste.pasteEntities());
+    }
+
+    @Test
+    void parsesSaveEntityFlags() {
+        CommandParseResult result = parser.parse(new String[]{"save", "house", "--no-entities"});
+        CommandParseResult.Save save = assertInstanceOf(CommandParseResult.Save.class, result);
+        assertEquals("house", save.name());
+        assertEquals(false, save.saveEntities());
+    }
+
+    @Test
     void rejectsInvalidPasteFlags() {
         assertThrows(IllegalArgumentException.class, () -> parser.parse(new String[]{"paste", "house", "--rotate", "45"}));
         assertThrows(IllegalArgumentException.class, () -> parser.parse(new String[]{"paste", "house", "--unknown"}));
@@ -41,5 +57,13 @@ class CommandParserTest {
         CommandParseResult.Simple simple = assertInstanceOf(CommandParseResult.Simple.class, result);
         assertEquals(CommandParseResult.Subcommand.ROTATE, simple.subcommand());
         assertEquals("90", simple.value());
+    }
+
+    @Test
+    void parsesMoveCommand() {
+        CommandParseResult result = parser.parse(new String[]{"move", "forward", "3"});
+        CommandParseResult.Move move = assertInstanceOf(CommandParseResult.Move.class, result);
+        assertEquals("forward", move.direction());
+        assertEquals(3, move.blocks());
     }
 }

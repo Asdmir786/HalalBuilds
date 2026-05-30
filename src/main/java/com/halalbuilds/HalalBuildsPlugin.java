@@ -5,6 +5,7 @@ import com.halalbuilds.command.HalalBuildsCommand;
 import com.halalbuilds.config.ConfigService;
 import com.halalbuilds.config.HalalBuildsConfig;
 import com.halalbuilds.paste.PasteService;
+import com.halalbuilds.preview.VisualPreviewService;
 import com.halalbuilds.schematic.SchematicService;
 import com.halalbuilds.selection.SelectionService;
 import com.halalbuilds.storage.BuildStorageService;
@@ -24,6 +25,7 @@ public final class HalalBuildsPlugin extends JavaPlugin {
     private ClipboardService clipboardService;
     private UndoService undoService;
     private PasteService pasteService;
+    private VisualPreviewService visualPreviewService;
 
     @Override
     public void onEnable() {
@@ -41,6 +43,7 @@ public final class HalalBuildsPlugin extends JavaPlugin {
         this.schematicService = new SchematicService();
         this.clipboardService = new ClipboardService();
         this.undoService = new UndoService();
+        this.visualPreviewService = new VisualPreviewService(this);
         this.pasteService = new PasteService(
             storageService,
             schematicService,
@@ -73,6 +76,9 @@ public final class HalalBuildsPlugin extends JavaPlugin {
         }
         if (undoService != null) {
             undoService.clearAll();
+        }
+        if (visualPreviewService != null) {
+            visualPreviewService.clearAll();
         }
     }
 
@@ -124,5 +130,9 @@ public final class HalalBuildsPlugin extends JavaPlugin {
 
     public PasteService pasteService() {
         return pasteService;
+    }
+
+    public VisualPreviewService visualPreviewService() {
+        return visualPreviewService;
     }
 }

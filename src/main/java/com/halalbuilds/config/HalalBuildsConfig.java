@@ -4,6 +4,7 @@ import com.halalbuilds.model.PasteMode;
 import java.util.List;
 import java.util.Set;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 
 public record HalalBuildsConfig(
     int maxSelectionVolume,
@@ -15,6 +16,8 @@ public record HalalBuildsConfig(
     boolean clearTerrainAboveFootprint,
     boolean requirePreviewForLargePastes,
     int pendingOperationTimeoutSeconds,
+    PreviewConfig preview,
+    EntityConfig entities,
     Material foundationMaterial,
     boolean fillUnderFootprint,
     boolean onlyFillUnderNonAirBlocks,
@@ -27,6 +30,19 @@ public record HalalBuildsConfig(
     WorldsConfig worlds,
     String messagePrefix
 ) {
+    public record PreviewConfig(
+        boolean enabled,
+        int refreshSeconds,
+        Particle particle,
+        boolean showCorners,
+        boolean showHeightPillars,
+        boolean showFacingArrow
+    ) {
+    }
+
+    public record EntityConfig(boolean saveEntities, boolean pasteEntities) {
+    }
+
     public record WorldsConfig(String mode, Set<String> enabledWorlds, Set<String> disabledWorlds) {
         public boolean isWorldEnabled(String worldName) {
             return switch (mode) {
@@ -37,4 +53,3 @@ public record HalalBuildsConfig(
         }
     }
 }
-

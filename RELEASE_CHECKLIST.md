@@ -1,6 +1,6 @@
 # Release Checklist
 
-Use this checklist before publishing HalalBuilds `1.0.1`.
+Use this checklist before publishing HalalBuilds `1.1.0`.
 
 ## Local Build
 
@@ -10,7 +10,7 @@ Use this checklist before publishing HalalBuilds `1.0.1`.
 - [ ] Confirm artifact exists:
 
 ```text
-build/libs/HalalBuilds-1.0.1.jar
+build/libs/HalalBuilds-1.1.0.jar
 ```
 
 ## Test Server Setup
@@ -18,7 +18,7 @@ build/libs/HalalBuilds-1.0.1.jar
 - [ ] Create or use a test Paper `1.21.11` server.
 - [ ] Run the server with Java `21`.
 - [ ] Install FAWE.
-- [ ] Install `HalalBuilds-1.0.1.jar`.
+- [ ] Install `HalalBuilds-1.1.0.jar`.
 - [ ] Start the server.
 - [ ] Confirm `/plugins` shows HalalBuilds enabled.
 - [ ] Confirm `plugins/HalalBuilds/` is generated.
@@ -46,6 +46,9 @@ Expected:
 - [ ] Look at a flat target block.
 - [ ] Run `/hb paste test_house --preview`.
 - [ ] Confirm the preview target coordinates are correct.
+- [ ] Confirm the particle preview appears.
+- [ ] Run `/hb move forward 3`.
+- [ ] Confirm the particle preview moves.
 - [ ] Run `/hb confirm`.
 
 Expected:
@@ -65,6 +68,22 @@ Expected:
 
 - Build rotates predictably.
 - Alignment is acceptable.
+- Visual preview refreshes after rotation.
+
+## Air And Entity Controls
+
+- [ ] Run `/hb paste test_house --ignore-air --preview`.
+- [ ] Run `/hb confirm`.
+- [ ] Run `/hb paste test_house --paste-air --preview`.
+- [ ] Run `/hb confirm`.
+- [ ] Save a test selection with `/hb save entity_test --entities`.
+- [ ] Paste it with `/hb paste entity_test --entities --preview`.
+
+Expected:
+
+- Ignore-air does not replace existing blocks with schematic air.
+- Paste-air allows schematic air to replace existing blocks.
+- Entity flags do not throw command errors.
 
 ## Clipboard And Cut
 
@@ -123,7 +142,7 @@ Only publish after the smoke test passes.
 
 Recommended release files:
 
-- `build/libs/HalalBuilds-1.0.1.jar`
+- `build/libs/HalalBuilds-1.1.0.jar`
 - `README.md`
 - `USER_GUIDE.md`
 - `RELEASE_NOTES.md`

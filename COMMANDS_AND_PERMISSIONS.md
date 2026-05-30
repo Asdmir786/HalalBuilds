@@ -22,13 +22,18 @@ All player-facing commands should require `halalbuilds.use` unless the command i
 | Command | Permission | Description |
 | --- | --- | --- |
 | `/halalbuilds wand` | `halalbuilds.wand` | Gives the player a selection wand or activates the selection tool. |
-| `/halalbuilds save <name>` | `halalbuilds.save` | Saves the current WorldEdit/FAWE selection as a named build. |
+| `/halalbuilds save <name> [--entities\|--no-entities]` | `halalbuilds.save` | Saves the current WorldEdit/FAWE selection as a named build. |
 | `/halalbuilds copy` | `halalbuilds.copy` | Copies the current selection into the player's temporary clipboard. |
 | `/halalbuilds cut` | `halalbuilds.cut` | Copies the current selection, then safely removes the original blocks. |
 | `/halalbuilds paste <name\|clipboard>` | `halalbuilds.paste` | Pastes a saved build or the player's clipboard at the target location. |
 | `/halalbuilds paste <name\|clipboard> --rotate <0\|90\|180\|270>` | `halalbuilds.paste` | Pastes with rotation. |
 | `/halalbuilds paste <name\|clipboard> --preview` | `halalbuilds.preview` | Creates a preview or pending operation before placement. |
+| `/halalbuilds paste <name\|clipboard> --ignore-air` | `halalbuilds.paste` | Pastes while skipping schematic air blocks. |
+| `/halalbuilds paste <name\|clipboard> --paste-air` | `halalbuilds.paste` | Pastes schematic air blocks too. |
+| `/halalbuilds paste <name\|clipboard> --entities` | `halalbuilds.paste` | Pastes saved schematic entities when present. |
+| `/halalbuilds paste <name\|clipboard> --no-entities` | `halalbuilds.paste` | Skips saved schematic entities. |
 | `/halalbuilds rotate <0\|90\|180\|270>` | `halalbuilds.paste` | Changes the rotation of the player's pending preview. |
+| `/halalbuilds move <up\|down\|forward\|back\|left\|right> <blocks>` | `halalbuilds.move` | Moves the player's pending preview before confirmation. |
 | `/halalbuilds confirm` | `halalbuilds.confirm` | Confirms the player's pending operation. |
 | `/halalbuilds cancel` | `halalbuilds.confirm` | Cancels the player's pending operation. |
 | `/halalbuilds import <filename> [name]` | `halalbuilds.import` | Imports a schematic from the controlled imports folder. |
@@ -98,6 +103,7 @@ These commands are planned for the protection phase. They are documented now so 
 ```text
 /hb paste starter_house --preview
 /hb rotate 90
+/hb move forward 3
 /hb confirm
 ```
 
@@ -186,6 +192,7 @@ plugins/HalalBuilds/exports/castle.schem
 | `halalbuilds.copy` | op | Allows copying selected builds. |
 | `halalbuilds.cut` | op | Allows cutting selected builds. |
 | `halalbuilds.paste` | op | Allows pasting saved builds and clipboard builds. |
+| `halalbuilds.move` | op | Allows moving pending paste previews. |
 | `halalbuilds.preview` | op | Allows previewing placements. |
 | `halalbuilds.confirm` | op | Allows confirming or canceling pending operations. |
 | `halalbuilds.import` | op | Allows importing files from the imports folder. |
@@ -210,6 +217,7 @@ plugins/HalalBuilds/exports/castle.schem
 - `halalbuilds.copy`
 - `halalbuilds.cut`
 - `halalbuilds.paste`
+- `halalbuilds.move`
 - `halalbuilds.preview`
 - `halalbuilds.confirm`
 - `halalbuilds.import`

@@ -4,7 +4,7 @@
 ![Java 21](https://img.shields.io/badge/Java-21-orange)
 ![Paper 1.21.11](https://img.shields.io/badge/Paper-1.21.11-blue)
 ![FAWE Required](https://img.shields.io/badge/FAWE-required-green)
-![Version](https://img.shields.io/badge/version-1.0.1-brightgreen)
+![Version](https://img.shields.io/badge/version-1.1.0-brightgreen)
 
 HalalBuilds is a Paper Minecraft Java Edition plugin for admins and builders who want a safer structure workflow on top of FAWE/WorldEdit.
 
@@ -14,9 +14,9 @@ It lets staff save cuboid selections as named builds, copy/cut/paste structures,
 
 ## Status
 
-Current release candidate: **1.0.1**
+Current release: **1.1.0**
 
-HalalBuilds v1 is command-based and ready for Paper + FAWE smoke testing. Inventory GUI, visual particle previews, clean scan modes, and WorldGuard/native protection are planned future work.
+HalalBuilds v1.1.0 adds visual particle previews, movable pending placements, paste-air controls, and entity toggles. Inventory GUI, clean scan modes, and WorldGuard/native protection are planned future work.
 
 ## Target Stack
 
@@ -40,7 +40,10 @@ HalalBuilds v1 is command-based and ready for Paper + FAWE smoke testing. Invent
 - Cut selected builds by copying first, then removing the original.
 - Paste saved builds or clipboard builds.
 - Rotate pending previews or paste commands by `0`, `90`, `180`, or `270` degrees.
-- Preview/confirm/cancel flow for risky operations.
+- Visual particle preview plus chat preview for pending operations.
+- Move pending previews up, down, forward, back, left, or right before confirming.
+- Ignore-air or paste-air controls per paste.
+- Save/paste entity controls per command.
 - Smart foundation mode for uneven terrain.
 - Exact paste mode for raw schematic placement.
 - Import `.schem` files from a controlled imports folder.
@@ -53,8 +56,8 @@ HalalBuilds v1 is command-based and ready for Paper + FAWE smoke testing. Invent
 
 1. Run Paper `1.21.11` with Java `21`.
 2. Install FAWE.
-3. Download `HalalBuilds-1.0.1.jar` from GitHub Releases.
-4. Place `HalalBuilds-1.0.1.jar` in the server `plugins/` folder.
+3. Download `HalalBuilds-1.1.0.jar` from GitHub Releases.
+4. Place `HalalBuilds-1.1.0.jar` in the server `plugins/` folder.
 5. Start the server once.
 6. Edit `plugins/HalalBuilds/config.yml` if needed.
 7. Restart or run:
@@ -92,6 +95,7 @@ Preview, rotate, and confirm a paste:
 ```text
 /hb paste starter_house --preview
 /hb rotate 90
+/hb move forward 3
 /hb confirm
 ```
 
@@ -108,7 +112,7 @@ HalalBuilds v1 saves exactly what is inside the selected cuboid.
 
 If the selection is only one block tall, it will save only a flat layer. Select from the bottom corner to the opposite top corner to capture a full building.
 
-If a build was saved with an older test jar and pastes as air or appears to do nothing, delete and re-save it with `1.0.1`.
+If a build was saved with an older test jar and pastes as air or appears to do nothing, delete and re-save it with the current release.
 
 ## Commands
 
@@ -135,6 +139,7 @@ Common commands:
 /hb paste <name|clipboard>
 /hb paste <name|clipboard> --preview
 /hb rotate <0|90|180|270>
+/hb move <up|down|forward|back|left|right> <blocks>
 /hb confirm
 /hb cancel
 /hb import <filename> [name]
@@ -180,7 +185,7 @@ $env:PATH = "$env:JAVA_HOME\bin;" + $env:PATH
 Release jar:
 
 ```text
-build/libs/HalalBuilds-1.0.1.jar
+build/libs/HalalBuilds-1.1.0.jar
 ```
 
 ## Roadmap
@@ -188,7 +193,7 @@ build/libs/HalalBuilds-1.0.1.jar
 Planned future work:
 
 - Inventory GUI build browser.
-- Visual particle/block outline previews.
+- Smart placement queue for huge builds.
 - Resource-pack enhanced icons.
 - Clean scan modes for trimming air and filtering terrain blocks.
 - WorldGuard integration.

@@ -67,6 +67,16 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        if (result instanceof CommandParseResult.Save save) {
+            handleSave(sender, save);
+            return;
+        }
+
+        if (result instanceof CommandParseResult.Move move) {
+            handleMove(sender, move);
+            return;
+        }
+
         if (result instanceof CommandParseResult.Paste paste) {
             requirePermission(sender, paste.preview() ? "halalbuilds.preview" : "halalbuilds.paste");
             requirePermission(sender, "halalbuilds.paste");
@@ -80,12 +90,15 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 clipboardSource,
                 paste.rotation(),
                 paste.pasteMode(),
+                paste.pasteAirBlocks(),
+                paste.pasteEntities(),
                 plugin.config(),
                 paste.preview()
             );
             if (plan.summary().requiresConfirmation()) {
                 var pending = plugin.pasteService().getPending(player.getUniqueId(), plugin.config())
                     .orElseThrow(() -> new IllegalStateException("Pending paste operation was not retained."));
+                plugin.visualPreviewService().show(player, pending);
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&ePlacement queued for confirmation."));
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), previewText(pending)));
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&eUse /hb confirm to apply or /hb cancel to discard."));
@@ -96,6 +109,8 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                     clipboardSource,
                     paste.rotation(),
                     paste.pasteMode(),
+                    paste.pasteAirBlocks(),
+                    paste.pasteEntities(),
                     plugin.config()
                 );
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aPaste complete."));
@@ -111,36 +126,14 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 player.getInventory().addItem(new ItemStack(Material.WOODEN_AXE));
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aSelection wand added. Use FAWE/WorldEdit selection points with the axe."));
             }
-            case SAVE -> {
-                requirePermission(sender, "halalbuilds.save");
-                Player player = requirePlayer(sender);
-                ensureWorldEnabled(player);
-                String buildName = NameValidator.validateBuildName(simple.value());
-                SelectionService.SelectionData selection = requireSelection(player);
-                assertSelectionWithinLimit(selection.dimensions());
-                plugin.storageService().assertWritable(buildName, plugin.config().allowOverwrite());
-                Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region());
-                var record = plugin.storageService().prepareBuildRecord(buildName);
-                plugin.schematicService().writeSchematic(clipboard, record.schematicPath());
-                plugin.storageService().writeMetadata(new BuildMetadata(
-                    buildName,
-                    player.getUniqueId(),
-                    Instant.now(),
-                    selection.dimensions(),
-                    selection.world().getName(),
-                    new Vector3i(0, 0, 0),
-                    List.of(),
-                    ""
-                ));
-                sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aSaved build '&f" + buildName + "&a'."));
-            }
+            case SAVE -> throw new IllegalArgumentException("Usage: /hb save <name> [--entities|--no-entities]");
             case COPY -> {
                 requirePermission(sender, "halalbuilds.copy");
                 Player player = requirePlayer(sender);
                 ensureWorldEnabled(player);
                 SelectionService.SelectionData selection = requireSelection(player);
                 assertSelectionWithinLimit(selection.dimensions());
-                Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region());
+                Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region(), plugin.config().entities().saveEntities());
                 plugin.clipboardService().store(new ClipboardSnapshot(
                     player.getUniqueId(),
                     clipboard,
@@ -157,7 +150,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 ensureWorldEnabled(player);
                 SelectionService.SelectionData selection = requireSelection(player);
                 assertSelectionWithinLimit(selection.dimensions());
-                Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region());
+                Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region(), plugin.config().entities().saveEntities());
                 Set<Material> denylisted = scanSelectionForDenylisted(selection);
                 if (!denylisted.isEmpty() && plugin.config().stopOnDenylistedBlocks()) {
                     throw new IllegalArgumentException("Cut blocked by denylisted blocks: " + denylisted);
@@ -190,6 +183,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 var pending = plugin.pasteService().getPending(player.getUniqueId(), plugin.config())
                     .orElseThrow(() -> new IllegalArgumentException("You do not have a pending HalalBuilds operation."));
                 plugin.pasteService().executePendingPaste(player, pending, plugin.config());
+                plugin.visualPreviewService().clear(player.getUniqueId());
                 var target = pending.targetLocation();
                 sender.sendMessage(Messages.prefixed(
                     plugin.config().messagePrefix(),
@@ -210,6 +204,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 requirePermission(sender, "halalbuilds.confirm");
                 Player player = requirePlayer(sender);
                 plugin.pasteService().clearPending(player.getUniqueId());
+                plugin.visualPreviewService().clear(player.getUniqueId());
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&ePending placement cancelled."));
             }
             case IMPORT -> {
@@ -286,6 +281,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 var pending = plugin.pasteService().getPending(player.getUniqueId(), plugin.config())
                     .orElseThrow(() -> new IllegalArgumentException("You do not have a pending paste to rotate. Use /hb paste <name|clipboard> --preview first."));
                 var rotated = plugin.pasteService().rotatePendingPaste(player, pending, rotation, plugin.config());
+                plugin.visualPreviewService().show(player, rotated);
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aPending placement rotation set to &f" + rotation.degrees() + "&a degrees."));
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), previewText(rotated)));
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&eUse /hb confirm to paste this preview or /hb cancel to discard it."));
@@ -296,6 +292,43 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aHalalBuilds config reloaded."));
             }
         }
+    }
+
+    private void handleSave(CommandSender sender, CommandParseResult.Save save) throws Exception {
+        requirePermission(sender, "halalbuilds.save");
+        Player player = requirePlayer(sender);
+        ensureWorldEnabled(player);
+        String buildName = NameValidator.validateBuildName(save.name());
+        boolean saveEntities = save.saveEntities() == null ? plugin.config().entities().saveEntities() : save.saveEntities();
+        SelectionService.SelectionData selection = requireSelection(player);
+        assertSelectionWithinLimit(selection.dimensions());
+        plugin.storageService().assertWritable(buildName, plugin.config().allowOverwrite());
+        Clipboard clipboard = plugin.schematicService().copyRegion(selection.world(), selection.region(), saveEntities);
+        var record = plugin.storageService().prepareBuildRecord(buildName);
+        plugin.schematicService().writeSchematic(clipboard, record.schematicPath());
+        plugin.storageService().writeMetadata(new BuildMetadata(
+            buildName,
+            player.getUniqueId(),
+            Instant.now(),
+            selection.dimensions(),
+            selection.world().getName(),
+            new Vector3i(0, 0, 0),
+            saveEntities ? List.of("entities") : List.of("no_entities"),
+            ""
+        ));
+        sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aSaved build '&f" + buildName + "&a' " + (saveEntities ? "with" : "without") + " entities."));
+    }
+
+    private void handleMove(CommandSender sender, CommandParseResult.Move move) throws Exception {
+        requirePermission(sender, "halalbuilds.move");
+        Player player = requirePlayer(sender);
+        var pending = plugin.pasteService().getPending(player.getUniqueId(), plugin.config())
+            .orElseThrow(() -> new IllegalArgumentException("You do not have a pending paste to move. Use /hb paste <name|clipboard> --preview first."));
+        var moved = plugin.pasteService().movePendingPaste(player, pending, move.direction(), move.blocks(), plugin.config());
+        plugin.visualPreviewService().show(player, moved);
+        sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aPending placement moved &f" + move.direction() + " " + move.blocks() + "&a blocks."));
+        sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), previewText(moved)));
+        sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&eUse /hb confirm to paste this preview or /hb cancel to discard it."));
     }
 
     private Player requirePlayer(CommandSender sender) {
@@ -352,6 +385,10 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
             + "&e, target &f" + target.getBlockX() + ", " + target.getBlockY() + ", " + target.getBlockZ()
             + "&e, rotation &f" + pending.rotation().degrees()
             + "&e, mode &f" + pending.pasteMode().name().toLowerCase(Locale.ROOT)
+            + "&e, air &f" + (pending.pasteAirBlocks() ? "paste" : "ignore")
+            + "&e, entities &f" + (pending.pasteEntities() ? "paste" : "skip")
+            + "&e, skipped air &f" + summary.airBlocksSkipped()
+            + "&e, entities found &f" + summary.entityCount()
             + "&e, clear &f" + summary.terrainBlocksToClear()
             + "&e, foundation &f" + summary.foundationBlocksToPlace()
             + (summary.denylistedBlocks().isEmpty() ? "" : "&e, denylisted &f" + summary.denylistedBlocks());
@@ -359,14 +396,17 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
 
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&aUsage:"));
-        sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&f/hb wand, save <name>, copy, cut, paste <name|clipboard>, rotate <0|90|180|270>, confirm, cancel"));
+        sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&f/hb wand, save <name>, copy, cut, paste <name|clipboard>, rotate <0|90|180|270>, move <direction> <blocks>, confirm, cancel"));
         sender.sendMessage(Messages.prefixed(plugin.config().messagePrefix(), "&f/hb import <file> [name], export <name>, list, info <name>, delete <name>, undo, reload"));
     }
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            return filter(args[0], List.of("wand", "save", "copy", "cut", "paste", "rotate", "confirm", "cancel", "import", "export", "list", "info", "delete", "undo", "reload"));
+            return filter(args[0], List.of("wand", "save", "copy", "cut", "paste", "rotate", "move", "confirm", "cancel", "import", "export", "list", "info", "delete", "undo", "reload"));
+        }
+        if (args.length == 2 && "move".equalsIgnoreCase(args[0])) {
+            return filter(args[1], List.of("up", "down", "forward", "back", "left", "right"));
         }
         if (args.length == 2 && List.of("rotate", "rotation").contains(args[0].toLowerCase(Locale.ROOT))) {
             return filter(args[1], List.of("0", "90", "180", "270"));
@@ -386,7 +426,7 @@ public final class HalalBuildsCommand implements CommandExecutor, TabCompleter {
             String current = args[args.length - 1];
             String previous = args[args.length - 2];
             if (!previous.startsWith("--")) {
-                return filter(current, List.of("--rotate", "--preview", "--mode"));
+                return filter(current, List.of("--rotate", "--preview", "--mode", "--ignore-air", "--paste-air", "--entities", "--no-entities"));
             }
         }
         if (args.length >= 4 && "paste".equalsIgnoreCase(args[0])) {

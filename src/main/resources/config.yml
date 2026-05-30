@@ -8,10 +8,22 @@ limits:
 
 paste:
   default-mode: smart_foundation
-  paste-air-blocks: true
+  paste-air-blocks: false
   clear-terrain-above-footprint: true
   require-preview-for-large-pastes: true
   pending-operation-timeout-seconds: 120
+
+preview:
+  enabled: true
+  refresh-seconds: 2
+  particle: END_ROD
+  show-corners: true
+  show-height-pillars: true
+  show-facing-arrow: true
+
+entities:
+  save-entities: true
+  paste-entities: true
 
 foundation:
   material: STONE_BRICKS

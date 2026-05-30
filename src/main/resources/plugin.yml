@@ -31,6 +31,9 @@ permissions:
   halalbuilds.paste:
     description: Allows pasting saved builds and clipboard builds.
     default: op
+  halalbuilds.move:
+    description: Allows moving pending paste previews.
+    default: op
   halalbuilds.preview:
     description: Allows previewing placements.
     default: op
@@ -77,6 +80,7 @@ permissions:
       halalbuilds.copy: true
       halalbuilds.cut: true
       halalbuilds.paste: true
+      halalbuilds.move: true
       halalbuilds.preview: true
       halalbuilds.confirm: true
       halalbuilds.import: true

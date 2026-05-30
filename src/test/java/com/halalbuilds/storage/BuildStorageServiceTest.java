@@ -28,6 +28,8 @@ class BuildStorageServiceTest {
             true,
             true,
             5,
+            new HalalBuildsConfig.PreviewConfig(true, 2, org.bukkit.Particle.END_ROD, true, true, true),
+            new HalalBuildsConfig.EntityConfig(true, true),
             Material.STONE,
             true,
             true,

@@ -25,15 +25,20 @@ public final class TerrainPlanner {
         this.schematicService = schematicService;
     }
 
-    public PlacementPlan plan(World world, Clipboard clipboard, Location target, PasteMode mode, HalalBuildsConfig config, boolean previewRequested) {
+    public PlacementPlan plan(World world, Clipboard clipboard, Location target, PasteMode mode, HalalBuildsConfig config, boolean previewRequested, boolean pasteAirBlocks) {
         Dimensions dimensions = schematicService.dimensionsOf(clipboard.getRegion());
         BlockVector3 minimum = BlockVector3.at(target.getBlockX(), target.getBlockY(), target.getBlockZ());
         BlockVector3 maximum = minimum.add(dimensions.width() - 1, dimensions.height() - 1, dimensions.length() - 1);
+        long airBlocks = countAirBlocks(clipboard);
+        long airBlocksSkipped = pasteAirBlocks ? 0 : airBlocks;
+        long entityCount = clipboard.getEntities().size();
 
         if (mode == PasteMode.EXACT) {
             PlacementSummary summary = new PlacementSummary(
                 dimensions,
                 dimensions.volume(),
+                airBlocksSkipped,
+                entityCount,
                 0,
                 0,
                 Set.of(),
@@ -105,12 +110,24 @@ public final class TerrainPlanner {
         PlacementSummary summary = new PlacementSummary(
             dimensions,
             dimensions.volume(),
+            airBlocksSkipped,
+            entityCount,
             clearBlocks.size(),
             foundationBlocks.size(),
             denylisted.stream().map(Material::name).collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new)),
             requiresConfirmation
         );
         return new PlacementPlan(dimensions, minimum, maximum, clearBlocks, foundationBlocks, Set.copyOf(denylisted), summary);
+    }
+
+    private static long countAirBlocks(Clipboard clipboard) {
+        long airBlocks = 0;
+        for (BlockVector3 point : clipboard.getRegion()) {
+            if (clipboard.getFullBlock(point).getBlockType().getMaterial().isAir()) {
+                airBlocks++;
+            }
+        }
+        return airBlocks;
     }
 
     private static long columnKey(int x, int z) {

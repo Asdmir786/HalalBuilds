@@ -15,6 +15,7 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.util.Location;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,6 +25,10 @@ import org.bukkit.World;
 
 public final class SchematicService {
     public Clipboard copyRegion(World world, Region region) {
+        return copyRegion(world, region, true);
+    }
+
+    public Clipboard copyRegion(World world, Region region, boolean copyEntities) {
         Dimensions dimensions = dimensionsOf(region);
         CuboidRegion clipboardRegion = new CuboidRegion(
             BlockVector3.ZERO,
@@ -34,7 +39,7 @@ public final class SchematicService {
 
         try (EditSession source = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world))) {
             ForwardExtentCopy copy = new ForwardExtentCopy(source, region, clipboard, BlockVector3.ZERO);
-            copy.setCopyingEntities(true);
+            copy.setCopyingEntities(copyEntities);
             Operations.complete(copy);
         }
         return clipboard;
@@ -71,13 +76,27 @@ public final class SchematicService {
         );
         BlockArrayClipboard normalized = new BlockArrayClipboard(targetRegion);
         normalized.setOrigin(BlockVector3.ZERO);
+        BlockVector3 minimum = source.getRegion().getMinimumPoint();
         for (BlockVector3 sourcePoint : source.getRegion()) {
-            BlockVector3 minimum = source.getRegion().getMinimumPoint();
             BlockVector3 destination = sourcePoint.subtract(minimum);
             normalized.setBlock(destination, source.getFullBlock(sourcePoint));
             if (source.hasBiomes()) {
                 normalized.setBiome(destination, source.getBiome(sourcePoint));
             }
+        }
+        for (var entity : source.getEntities()) {
+            Location location = entity.getLocation();
+            normalized.createEntity(
+                new Location(
+                    normalized,
+                    location.x() - minimum.x(),
+                    location.y() - minimum.y(),
+                    location.z() - minimum.z(),
+                    location.getYaw(),
+                    location.getPitch()
+                ),
+                entity.getState()
+            );
         }
         return normalized;
     }
@@ -105,6 +124,26 @@ public final class SchematicService {
                 rotated.setBiome(rotatedPoint, source.getBiome(sourcePoint));
             }
         }
+        for (var entity : source.getEntities()) {
+            Location location = entity.getLocation();
+            BlockVector3 localBlock = BlockVector3.at(
+                (int) Math.floor(location.x() - minimum.x()),
+                (int) Math.floor(location.y() - minimum.y()),
+                (int) Math.floor(location.z() - minimum.z())
+            );
+            BlockVector3 rotatedBlock = rotatePoint(localBlock, sourceDimensions, rotation);
+            rotated.createEntity(
+                new Location(
+                    rotated,
+                    rotatedBlock.x() + 0.5,
+                    location.y() - minimum.y(),
+                    rotatedBlock.z() + 0.5,
+                    rotatedYaw(location.getYaw(), rotation),
+                    location.getPitch()
+                ),
+                entity.getState()
+            );
+        }
         return rotated;
     }
 
@@ -129,5 +168,9 @@ public final class SchematicService {
             case DEG_180 -> BlockVector3.at(sourceDimensions.width() - 1 - x, y, sourceDimensions.length() - 1 - z);
             case DEG_270 -> BlockVector3.at(z, y, sourceDimensions.width() - 1 - x);
         };
+    }
+
+    private float rotatedYaw(float yaw, Rotation rotation) {
+        return yaw + rotation.degrees();
     }
 }

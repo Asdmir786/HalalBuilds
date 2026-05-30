@@ -22,6 +22,11 @@ class ConfigServiceTest {
         yaml.set("paste.clear-terrain-above-footprint", true);
         yaml.set("paste.require-preview-for-large-pastes", true);
         yaml.set("paste.pending-operation-timeout-seconds", 120);
+        yaml.set("preview.enabled", true);
+        yaml.set("preview.refresh-seconds", 2);
+        yaml.set("preview.particle", "END_ROD");
+        yaml.set("entities.save-entities", true);
+        yaml.set("entities.paste-entities", true);
         yaml.set("foundation.material", "STONE_BRICKS");
         yaml.set("foundation.fill-under-footprint", true);
         yaml.set("foundation.only-fill-under-non-air-blocks", true);
@@ -39,8 +44,10 @@ class ConfigServiceTest {
         HalalBuildsConfig config = new ConfigService(Logger.getLogger("test")).load(yaml);
         assertEquals(PasteMode.SMART_FOUNDATION, config.defaultPasteMode());
         assertEquals(Material.STONE_BRICKS, config.foundationMaterial());
+        assertEquals(org.bukkit.Particle.END_ROD, config.preview().particle());
+        assertTrue(config.entities().saveEntities());
+        assertTrue(config.entities().pasteEntities());
         assertTrue(config.denylistedBlocks().contains(Material.CHEST));
         assertTrue(config.worlds().isWorldEnabled("world"));
     }
 }
-

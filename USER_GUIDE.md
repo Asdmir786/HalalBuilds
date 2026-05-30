@@ -1,8 +1,8 @@
 # HalalBuilds User Guide
 
-This guide explains how admins and builders use HalalBuilds v1 in-game.
+This guide explains how admins and builders use HalalBuilds v1.1.0 in-game.
 
-HalalBuilds v1 is command-based. It does not include a graphical build browser yet. Selection is done through WorldEdit/FAWE, and build management is done with `/halalbuilds` commands.
+HalalBuilds v1.1.0 is command-based with visual particle previews. It does not include a graphical build browser yet. Selection is done through WorldEdit/FAWE, and build management is done with `/halalbuilds` commands.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ Recommended:
 
 1. Stop the server.
 2. Install FAWE in the server `plugins/` folder.
-3. Copy `HalalBuilds-1.0.1.jar` into the server `plugins/` folder.
+3. Copy `HalalBuilds-1.1.0.jar` into the server `plugins/` folder.
 4. Start the server.
 5. Confirm the plugin creates:
 
@@ -60,6 +60,7 @@ Recommended builder permissions:
 /lp group builder permission set halalbuilds.copy true
 /lp group builder permission set halalbuilds.paste true
 /lp group builder permission set halalbuilds.preview true
+/lp group builder permission set halalbuilds.move true
 /lp group builder permission set halalbuilds.confirm true
 /lp group builder permission set halalbuilds.undo true
 ```
@@ -118,6 +119,12 @@ After selecting a complete cuboid around the structure:
 /hb save starter_house
 ```
 
+Save without entities:
+
+```text
+/hb save starter_house --no-entities
+```
+
 Saved builds are stored under:
 
 ```text
@@ -147,6 +154,8 @@ Look at the target block where the build should be placed, then run:
 ```
 
 HalalBuilds places the build above the block you are looking at. If you are not looking at a block within range, it uses your current block location.
+
+By default in v1.1.0, schematic air is ignored during paste. Use `--paste-air` when you want schematic air to replace existing blocks.
 
 ## Copy And Clipboard
 
@@ -251,7 +260,7 @@ Use preview before risky placements:
 /hb paste starter_house --preview
 ```
 
-If HalalBuilds requires confirmation, it will show a chat summary with:
+HalalBuilds will show a visual particle outline and a chat summary with:
 
 - source build or clipboard
 - dimensions
@@ -260,6 +269,10 @@ If HalalBuilds requires confirmation, it will show a chat summary with:
 - target coordinates
 - rotation
 - paste mode
+- air behavior
+- entity behavior
+- skipped air count
+- entity count
 - terrain blocks to clear
 - foundation blocks to place
 - denylisted blocks, if found
@@ -276,6 +289,49 @@ Cancel:
 
 ```text
 /hb cancel
+```
+
+Move a pending visual preview before confirmation:
+
+```text
+/hb move forward 3
+/hb move up 1
+/hb move left 2
+```
+
+Rotate and move can be combined:
+
+```text
+/hb paste starter_house --preview
+/hb rotate 90
+/hb move forward 3
+/hb confirm
+```
+
+## Air And Entity Controls
+
+Ignore schematic air:
+
+```text
+/hb paste starter_house --ignore-air
+```
+
+Paste schematic air:
+
+```text
+/hb paste starter_house --paste-air
+```
+
+Paste without entities:
+
+```text
+/hb paste starter_house --no-entities
+```
+
+Paste with entities:
+
+```text
+/hb paste starter_house --entities
 ```
 
 ## Import Schematics
@@ -337,7 +393,7 @@ This deletes the saved build from HalalBuilds storage. It does not remove alread
 
 ## Current UI Status
 
-HalalBuilds v1 has no custom graphical UI.
+HalalBuilds v1.1.0 has no custom graphical inventory UI.
 
 Current interaction style:
 
@@ -345,12 +401,13 @@ Current interaction style:
 - Commands for actions.
 - Chat messages for feedback.
 - Tab completion for saved build names.
+- Visual particle previews for pending placements.
 - Chat preview summaries for risky placements.
 
 Planned future UI options:
 
 - Inventory build browser.
 - Clickable build actions.
-- Visual placement preview with particles.
+- Full ghost-block placement previews.
 - Optional resource-pack enhanced icons and menu textures.
 - Optional web/GitHub documentation screenshots.

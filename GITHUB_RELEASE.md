@@ -1,43 +1,37 @@
 # GitHub Release
 
-Use this content for the first public release.
+Use this content for the v1.1.0 release.
 
 ## Tag
 
 ```text
-v1.0.1
+v1.1.0
 ```
 
 ## Title
 
 ```text
-HalalBuilds v1.0.1 - First Stable Release
+HalalBuilds v1.1.0 - Visual Preview Update
 ```
 
 ## Description
 
 ```markdown
-# HalalBuilds v1.0.1
+# HalalBuilds v1.1.0
 
-First stable release of HalalBuilds, a Paper plugin for saving, copying, cutting, pasting, importing, and exporting Minecraft builds with FAWE-powered schematic handling.
+Visual preview and paste-control update for HalalBuilds, a Paper plugin for saving, copying, cutting, pasting, importing, and exporting Minecraft builds with FAWE-powered schematic handling.
 
 ## Highlights
 
-- Save selected WorldEdit/FAWE cuboid regions as named builds
-- Copy, cut, and paste builds through `/hb`
-- Paste saved builds or player clipboard builds
-- Rotate pending pastes with `/hb rotate <0|90|180|270>`
-- Preview risky or large pastes before confirming
-- Confirm or cancel pending operations
-- Smart foundation placement for uneven terrain
-- Exact paste mode for raw schematic placement
-- Export saved builds to Sponge `.schem`
-- Import `.schem` files from the plugin imports folder
-- Undo latest paste/cut operation when possible
-- Safe file/name validation to prevent path traversal
-- Configurable paste limits, denylisted blocks, foundation material, worlds, and import extensions
-- LuckPerms-friendly permission nodes
-- Runtime FAWE dependency check
+- Visual particle outlines for pending paste previews
+- Move pending previews with `/hb move <direction> <blocks>`
+- Rotate pending previews with `/hb rotate <0|90|180|270>`
+- Confirm or cancel pending previews cleanly
+- Per-paste air controls with `--ignore-air` and `--paste-air`
+- Per-save and per-paste entity controls with `--entities` and `--no-entities`
+- Preview summaries now include skipped air and entity counts
+- New preview and entity config sections
+- New `halalbuilds.move` permission
 
 ## Requirements
 
@@ -47,7 +41,7 @@ First stable release of HalalBuilds, a Paper plugin for saving, copying, cutting
 
 ## Install
 
-1. Download `HalalBuilds-1.0.1.jar` from this release.
+1. Download `HalalBuilds-1.1.0.jar` from this release.
 2. Put it in your server `plugins/` folder.
 3. Make sure FAWE is also installed.
 4. Restart the server.
@@ -59,16 +53,17 @@ HalalBuilds uses FAWE/WorldEdit internally as the schematic and block-editing en
 
 ## Known Limits
 
-- Preview is currently chat-based, not a full visual hologram or outline preview.
+- Visual previews are particle outlines, not full ghost blocks.
 - Selection is cuboid-based through WorldEdit/FAWE.
 - WorldGuard/native building protection is planned for a later version.
-- Inventory GUI and resource-pack workflows are future features, not part of v1.0.1.
+- Inventory GUI and resource-pack workflows are future features, not part of v1.1.0.
+- Million-block smart placement queue is planned for a later version.
 ```
 
 ## Asset To Upload
 
 ```text
-build/libs/HalalBuilds-1.0.1.jar
+build/libs/HalalBuilds-1.1.0.jar
 ```
 
 ## Repository Description

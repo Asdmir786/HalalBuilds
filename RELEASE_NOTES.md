@@ -1,17 +1,31 @@
-# HalalBuilds 1.0.1 Release Notes
+# HalalBuilds 1.1.0 Release Notes
 
-HalalBuilds `1.0.1` is the first stable v1 release.
+HalalBuilds `1.1.0` is the visual preview and paste-control update.
 
-## Fixed In 1.0.1
+## Added In 1.1.0
 
-- Fixed saved/copy clipboard placement so selected cuboids are copied into the normalized schematic origin correctly.
-- This fixes a bug where `/hb confirm` could execute through FAWE but appear to paste nothing because the saved schematic content was offset incorrectly.
-- Added `/hb rotate <0|90|180|270>` to rotate an existing pending preview before confirmation.
-- Improved confirmation feedback so `/hb confirm` reports the world, target coordinates, and rotation used.
+- Visual particle previews for pending paste operations.
+- `/hb move <up|down|forward|back|left|right> <blocks>` to shift a pending preview before confirmation.
+- `/hb rotate <0|90|180|270>` now refreshes the visual preview.
+- `/hb cancel` and `/hb confirm` now clear the active visual preview.
+- Paste air controls:
+  - `/hb paste <name|clipboard> --ignore-air`
+  - `/hb paste <name|clipboard> --paste-air`
+- Entity controls:
+  - `/hb save <name> --entities`
+  - `/hb save <name> --no-entities`
+  - `/hb paste <name|clipboard> --entities`
+  - `/hb paste <name|clipboard> --no-entities`
+- Preview summaries now include skipped air and entity counts.
+- New `preview` config section for particle preview behavior.
+- New `entities` config section for default save/paste entity behavior.
+- New `halalbuilds.move` permission.
 
-Important upgrade note:
+## Changed In 1.1.0
 
-- If a build was saved with an older test jar and pastes as air or appears to do nothing, delete that saved build and save it again with `1.0.1`.
+- Default `paste.paste-air-blocks` is now `false`.
+- Normal pastes skip schematic air unless a player uses `--paste-air` or config changes the default.
+- Saved/copy clipboard workflows use the configured entity-save default.
 
 ## Target
 
@@ -20,40 +34,18 @@ Important upgrade note:
 - FAWE required at runtime
 - Sponge `.schem` import/export
 
-## Initial V1 Features
-
-- `/halalbuilds` root command with `/hb` and `/halalbuild` aliases.
-- Cuboid selection workflow using WorldEdit/FAWE selections.
-- Save selected builds to `plugins/HalalBuilds/builds/`.
-- Copy selections to a temporary per-player clipboard.
-- Cut selections by copying first, then removing the original.
-- Paste saved builds or clipboard builds.
-- Paste rotation support for `0`, `90`, `180`, and `270` degrees.
-- Smart foundation paste mode.
-- Exact paste mode.
-- Preview, confirm, and cancel flow for risky or large placements.
-- Import `.schem` files from `plugins/HalalBuilds/imports/`.
-- Export saved builds to `plugins/HalalBuilds/exports/`.
-- List, info, delete, undo, and reload commands.
-- Safe name and path validation for stored builds, imports, and exports.
-- Metadata files for saved builds.
-- Typed configuration loading.
-- Runtime FAWE dependency check.
-- Unit tests for validation, storage, config, metadata, command parsing, and schematic utilities.
-
 ## Known Limits
 
-- V1 is command-based and does not include an inventory GUI.
-- Preview is a chat summary, not a particle or block outline preview.
-- V1 saves selected cuboids as-is, including grass, dirt, air, and other blocks inside the selected bounds.
-- Clean scan/terrain filtering is planned for a later version.
-- WorldGuard and HalalBuilds-native structure protection are documented for v2 but not implemented in v1.
-- Final confidence requires live Paper + FAWE smoke testing on a real server.
+- Visual previews are particle outlines, not full ghost blocks.
+- Inventory GUI is not included yet.
+- WorldGuard and HalalBuilds-native structure protection are planned future work.
+- Million-block smart placement queue is planned for a later version.
+- Existing builds saved without entities cannot paste entities retroactively; re-save with entities enabled if needed.
 
 ## Release Artifact
 
 Expected jar after building:
 
 ```text
-build/libs/HalalBuilds-1.0.1.jar
+build/libs/HalalBuilds-1.1.0.jar
 ```

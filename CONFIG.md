@@ -17,10 +17,22 @@ limits:
 
 paste:
   default-mode: smart_foundation
-  paste-air-blocks: true
+  paste-air-blocks: false
   clear-terrain-above-footprint: true
   require-preview-for-large-pastes: true
   pending-operation-timeout-seconds: 120
+
+preview:
+  enabled: true
+  refresh-seconds: 2
+  particle: END_ROD
+  show-corners: true
+  show-height-pillars: true
+  show-facing-arrow: true
+
+entities:
+  save-entities: true
+  paste-entities: true
 
 foundation:
   material: STONE_BRICKS
@@ -163,7 +175,69 @@ When `false`, air is ignored except for terrain clearing performed by smart foun
 Recommended default:
 
 ```yaml
-paste-air-blocks: true
+paste-air-blocks: false
+```
+
+### `preview.enabled`
+
+Whether HalalBuilds should show particle outlines for pending paste previews.
+
+Recommended default:
+
+```yaml
+enabled: true
+```
+
+### `preview.refresh-seconds`
+
+How often the particle preview is redrawn for the player.
+
+Recommended default:
+
+```yaml
+refresh-seconds: 2
+```
+
+### `preview.particle`
+
+Particle used for the visual paste outline.
+
+Recommended default:
+
+```yaml
+particle: END_ROD
+```
+
+### `preview.show-corners`
+
+Whether preview corners should be emphasized with extra particles.
+
+### `preview.show-height-pillars`
+
+Whether the preview should draw vertical corner pillars up to the build height.
+
+### `preview.show-facing-arrow`
+
+Whether the preview should draw a direction arrow based on rotation.
+
+### `entities.save-entities`
+
+Default entity behavior when saving builds.
+
+Recommended default:
+
+```yaml
+save-entities: true
+```
+
+### `entities.paste-entities`
+
+Default entity behavior when pasting builds.
+
+Recommended default:
+
+```yaml
+paste-entities: true
 ```
 
 ### `paste.clear-terrain-above-footprint`

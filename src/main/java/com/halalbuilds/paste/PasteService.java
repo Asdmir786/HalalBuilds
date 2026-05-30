@@ -58,14 +58,18 @@ public final class PasteService {
         boolean clipboardSource,
         Rotation rotation,
         PasteMode requestedMode,
+        Boolean requestedPasteAirBlocks,
+        Boolean requestedPasteEntities,
         HalalBuildsConfig config,
         boolean previewRequested
     ) throws IOException {
         Clipboard clipboard = rotatedClipboard(sourceName, clipboardSource, rotation);
         Location target = resolveTargetLocation(player);
         PasteMode mode = requestedMode == null ? config.defaultPasteMode() : requestedMode;
+        boolean pasteAirBlocks = requestedPasteAirBlocks == null ? config.pasteAirBlocks() : requestedPasteAirBlocks;
+        boolean pasteEntities = requestedPasteEntities == null ? config.entities().pasteEntities() : requestedPasteEntities;
 
-        PlacementPlan plan = terrainPlanner.plan(player.getWorld(), clipboard, target, mode, config, previewRequested);
+        PlacementPlan plan = terrainPlanner.plan(player.getWorld(), clipboard, target, mode, config, previewRequested, pasteAirBlocks);
         if (!plan.denylistedMaterials().isEmpty() && config.stopOnDenylistedBlocks()) {
             throw new IllegalArgumentException("The target area includes denylisted blocks: " + plan.summary().denylistedBlocks());
         }
@@ -73,7 +77,7 @@ public final class PasteService {
         if (plan.summary().requiresConfirmation()) {
             undoService.storePending(
                 player.getUniqueId(),
-                new PendingPasteOperation(sourceName, clipboardSource, rotation, mode, previewRequested, target, plan.summary(), Instant.now())
+                new PendingPasteOperation(sourceName, clipboardSource, rotation, mode, pasteAirBlocks, pasteEntities, previewRequested, target, plan.summary(), Instant.now())
             );
         }
         return plan;
@@ -85,6 +89,8 @@ public final class PasteService {
         boolean clipboardSource,
         Rotation rotation,
         PasteMode requestedMode,
+        Boolean requestedPasteAirBlocks,
+        Boolean requestedPasteEntities,
         HalalBuildsConfig config
     ) throws IOException {
         executePasteAtTarget(
@@ -95,6 +101,8 @@ public final class PasteService {
             clipboardSource,
             rotation,
             requestedMode,
+            requestedPasteAirBlocks,
+            requestedPasteEntities,
             config
         );
     }
@@ -113,6 +121,8 @@ public final class PasteService {
             pending.clipboardSource(),
             pending.rotation(),
             pending.pasteMode(),
+            pending.pasteAirBlocks(),
+            pending.pasteEntities(),
             config
         );
     }
@@ -126,7 +136,7 @@ public final class PasteService {
 
         Clipboard clipboard = rotatedClipboard(pending.sourceName(), pending.clipboardSource(), rotation);
         Location normalizedTarget = targetBlockLocation(world, target);
-        PlacementPlan plan = terrainPlanner.plan(world, clipboard, normalizedTarget, pending.pasteMode(), config, true);
+        PlacementPlan plan = terrainPlanner.plan(world, clipboard, normalizedTarget, pending.pasteMode(), config, true, pending.pasteAirBlocks());
         if (!plan.denylistedMaterials().isEmpty() && config.stopOnDenylistedBlocks()) {
             throw new IllegalArgumentException("The target area includes denylisted blocks: " + plan.summary().denylistedBlocks());
         }
@@ -136,6 +146,8 @@ public final class PasteService {
             pending.clipboardSource(),
             rotation,
             pending.pasteMode(),
+            pending.pasteAirBlocks(),
+            pending.pasteEntities(),
             true,
             normalizedTarget,
             plan.summary(),
@@ -143,6 +155,36 @@ public final class PasteService {
         );
         undoService.storePending(player.getUniqueId(), rotated);
         return rotated;
+    }
+
+    public PendingPasteOperation movePendingPaste(Player player, PendingPasteOperation pending, String direction, int blocks, HalalBuildsConfig config) throws IOException {
+        Location target = pending.targetLocation();
+        World world = target.getWorld();
+        if (world == null) {
+            throw new IllegalArgumentException("The saved target world for this pending placement is unavailable.");
+        }
+
+        Location movedTarget = targetBlockLocation(world, target).add(moveX(player, direction, blocks), moveY(direction, blocks), moveZ(player, direction, blocks));
+        Clipboard clipboard = rotatedClipboard(pending.sourceName(), pending.clipboardSource(), pending.rotation());
+        PlacementPlan plan = terrainPlanner.plan(world, clipboard, movedTarget, pending.pasteMode(), config, true, pending.pasteAirBlocks());
+        if (!plan.denylistedMaterials().isEmpty() && config.stopOnDenylistedBlocks()) {
+            throw new IllegalArgumentException("The target area includes denylisted blocks: " + plan.summary().denylistedBlocks());
+        }
+
+        PendingPasteOperation moved = new PendingPasteOperation(
+            pending.sourceName(),
+            pending.clipboardSource(),
+            pending.rotation(),
+            pending.pasteMode(),
+            pending.pasteAirBlocks(),
+            pending.pasteEntities(),
+            true,
+            movedTarget,
+            plan.summary(),
+            Instant.now()
+        );
+        undoService.storePending(player.getUniqueId(), moved);
+        return moved;
     }
 
     private void executePasteAtTarget(
@@ -153,18 +195,22 @@ public final class PasteService {
         boolean clipboardSource,
         Rotation rotation,
         PasteMode requestedMode,
+        Boolean requestedPasteAirBlocks,
+        Boolean requestedPasteEntities,
         HalalBuildsConfig config
     ) throws IOException {
         Clipboard clipboard = rotatedClipboard(sourceName, clipboardSource, rotation);
         PasteMode mode = requestedMode == null ? config.defaultPasteMode() : requestedMode;
+        boolean pasteAirBlocks = requestedPasteAirBlocks == null ? config.pasteAirBlocks() : requestedPasteAirBlocks;
+        boolean pasteEntities = requestedPasteEntities == null ? config.entities().pasteEntities() : requestedPasteEntities;
         Location normalizedTarget = targetBlockLocation(world, target);
-        PlacementPlan plan = terrainPlanner.plan(world, clipboard, normalizedTarget, mode, config, false);
+        PlacementPlan plan = terrainPlanner.plan(world, clipboard, normalizedTarget, mode, config, false, pasteAirBlocks);
         if (!plan.denylistedMaterials().isEmpty() && config.stopOnDenylistedBlocks()) {
             throw new IllegalArgumentException("The target area includes denylisted blocks: " + plan.summary().denylistedBlocks());
         }
 
         UndoSnapshot undo = createUndoSnapshot(world, plan);
-        applyPlan(world, clipboard, normalizedTarget, plan, config);
+        applyPlan(world, clipboard, normalizedTarget, plan, config, pasteAirBlocks, pasteEntities);
         undoService.storeUndo(actorId, undo);
         undoService.clearPending(actorId);
     }
@@ -178,8 +224,8 @@ public final class PasteService {
             .orElseThrow(() -> new IllegalArgumentException("There is no undoable HalalBuilds action for you yet."));
         World world = Objects.requireNonNull(player.getServer().getWorld(snapshot.worldName()), "Undo world is unavailable.");
         Location target = new Location(world, snapshot.targetMinimumPoint().x(), snapshot.targetMinimumPoint().y(), snapshot.targetMinimumPoint().z());
-        PlacementPlan exactPlan = terrainPlanner.plan(world, snapshot.clipboard(), target, PasteMode.EXACT, fallbackConfig(), false);
-        applyPlan(world, snapshot.clipboard(), target, exactPlan, fallbackConfig());
+        PlacementPlan exactPlan = terrainPlanner.plan(world, snapshot.clipboard(), target, PasteMode.EXACT, fallbackConfig(), false, true);
+        applyPlan(world, snapshot.clipboard(), target, exactPlan, fallbackConfig(), true, false);
         undoService.clearUndo(player.getUniqueId());
     }
 
@@ -220,7 +266,7 @@ public final class PasteService {
         return new UndoSnapshot(clipboard, world.getName(), plan.targetMinimumPoint(), Instant.now(), "Undo placement");
     }
 
-    private void applyPlan(World world, Clipboard clipboard, Location target, PlacementPlan plan, HalalBuildsConfig config) {
+    private void applyPlan(World world, Clipboard clipboard, Location target, PlacementPlan plan, HalalBuildsConfig config, boolean pasteAirBlocks, boolean pasteEntities) {
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world))) {
             for (BlockVector3 block : plan.blocksToClear()) {
                 editSession.setBlock(block, BukkitAdapter.adapt(Material.AIR.createBlockData()));
@@ -231,9 +277,61 @@ public final class PasteService {
             ClipboardHolder holder = new ClipboardHolder(clipboard);
             Operations.complete(holder.createPaste(editSession)
                 .to(BlockVector3.at(target.getBlockX(), target.getBlockY(), target.getBlockZ()))
-                .ignoreAirBlocks(!config.pasteAirBlocks())
+                .ignoreAirBlocks(!pasteAirBlocks)
+                .copyEntities(pasteEntities)
                 .build());
         }
+    }
+
+    private int moveX(Player player, String direction, int blocks) {
+        return switch (direction.toLowerCase(java.util.Locale.ROOT)) {
+            case "forward" -> facingX(player) * blocks;
+            case "back", "backward" -> -facingX(player) * blocks;
+            case "left" -> facingZ(player) * blocks;
+            case "right" -> -facingZ(player) * blocks;
+            case "up", "down" -> 0;
+            default -> throw new IllegalArgumentException("Unknown move direction: " + direction);
+        };
+    }
+
+    private int moveY(String direction, int blocks) {
+        return switch (direction.toLowerCase(java.util.Locale.ROOT)) {
+            case "up" -> blocks;
+            case "down" -> -blocks;
+            case "forward", "back", "backward", "left", "right" -> 0;
+            default -> throw new IllegalArgumentException("Unknown move direction: " + direction);
+        };
+    }
+
+    private int moveZ(Player player, String direction, int blocks) {
+        return switch (direction.toLowerCase(java.util.Locale.ROOT)) {
+            case "forward" -> facingZ(player) * blocks;
+            case "back", "backward" -> -facingZ(player) * blocks;
+            case "left" -> -facingX(player) * blocks;
+            case "right" -> facingX(player) * blocks;
+            case "up", "down" -> 0;
+            default -> throw new IllegalArgumentException("Unknown move direction: " + direction);
+        };
+    }
+
+    private int facingX(Player player) {
+        return switch (cardinal(player)) {
+            case 1 -> -1;
+            case 3 -> 1;
+            default -> 0;
+        };
+    }
+
+    private int facingZ(Player player) {
+        return switch (cardinal(player)) {
+            case 0 -> 1;
+            case 2 -> -1;
+            default -> 0;
+        };
+    }
+
+    private int cardinal(Player player) {
+        return Math.floorMod(Math.round(player.getLocation().getYaw() / 90.0f), 4);
     }
 
     private Location resolveTargetLocation(Player player) {
@@ -255,6 +353,8 @@ public final class PasteService {
             true,
             false,
             120,
+            new HalalBuildsConfig.PreviewConfig(true, 2, org.bukkit.Particle.END_ROD, true, true, true),
+            new HalalBuildsConfig.EntityConfig(true, true),
             Material.STONE_BRICKS,
             true,
             true,

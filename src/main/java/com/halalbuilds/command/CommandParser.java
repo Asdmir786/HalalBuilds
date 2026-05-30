@@ -14,7 +14,7 @@ public final class CommandParser {
         String root = args[0].toLowerCase();
         return switch (root) {
             case "wand" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.WAND, null);
-            case "save" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.SAVE, requiredValue(args, "save"));
+            case "save" -> parseSave(args);
             case "copy" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.COPY, null);
             case "cut" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.CUT, null);
             case "confirm" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.CONFIRM, null);
@@ -29,6 +29,7 @@ public final class CommandParser {
             case "delete" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.DELETE, requiredValue(args, "delete"));
             case "undo" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.UNDO, null);
             case "rotate", "rotation" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.ROTATE, requiredValue(args, "rotate"));
+            case "move" -> parseMove(args);
             case "reload" -> new CommandParseResult.Simple(CommandParseResult.Subcommand.RELOAD, null);
             case "paste" -> parsePaste(args);
             default -> throw new IllegalArgumentException("Unknown subcommand: " + args[0]);
@@ -37,13 +38,15 @@ public final class CommandParser {
 
     private CommandParseResult parsePaste(String[] args) {
         if (args.length < 2) {
-            throw new IllegalArgumentException("Usage: /hb paste <name|clipboard> [--rotate <0|90|180|270>] [--preview] [--mode <smart_foundation|exact>]");
+            throw new IllegalArgumentException("Usage: /hb paste <name|clipboard> [--rotate <0|90|180|270>] [--preview] [--mode <smart_foundation|exact>] [--ignore-air|--paste-air] [--entities|--no-entities]");
         }
 
         String source = args[1];
         Rotation rotation = Rotation.DEG_0;
         boolean preview = false;
         PasteMode pasteMode = null;
+        Boolean pasteAirBlocks = null;
+        Boolean pasteEntities = null;
 
         List<String> remaining = new ArrayList<>();
         for (int index = 2; index < args.length; index++) {
@@ -54,6 +57,10 @@ public final class CommandParser {
             String flag = remaining.get(index);
             switch (flag) {
                 case "--preview" -> preview = true;
+                case "--ignore-air" -> pasteAirBlocks = false;
+                case "--paste-air" -> pasteAirBlocks = true;
+                case "--entities" -> pasteEntities = true;
+                case "--no-entities" -> pasteEntities = false;
                 case "--rotate" -> {
                     if (index + 1 >= remaining.size()) {
                         throw new IllegalArgumentException("Missing value for --rotate");
@@ -70,7 +77,33 @@ public final class CommandParser {
             }
         }
 
-        return new CommandParseResult.Paste(source, rotation, preview, pasteMode);
+        return new CommandParseResult.Paste(source, rotation, preview, pasteMode, pasteAirBlocks, pasteEntities);
+    }
+
+    private CommandParseResult parseSave(String[] args) {
+        if (args.length < 2) {
+            throw new IllegalArgumentException("Usage: /hb save <name> [--entities|--no-entities]");
+        }
+        Boolean saveEntities = null;
+        for (int index = 2; index < args.length; index++) {
+            switch (args[index]) {
+                case "--entities" -> saveEntities = true;
+                case "--no-entities" -> saveEntities = false;
+                default -> throw new IllegalArgumentException("Unknown save flag: " + args[index]);
+            }
+        }
+        return new CommandParseResult.Save(args[1], saveEntities);
+    }
+
+    private CommandParseResult parseMove(String[] args) {
+        if (args.length < 3) {
+            throw new IllegalArgumentException("Usage: /hb move <up|down|forward|back|left|right> <blocks>");
+        }
+        int blocks = Integer.parseInt(args[2]);
+        if (blocks <= 0) {
+            throw new IllegalArgumentException("Move distance must be greater than zero.");
+        }
+        return new CommandParseResult.Move(args[1].toLowerCase(), blocks);
     }
 
     private static String requiredValue(String[] args, String command) {

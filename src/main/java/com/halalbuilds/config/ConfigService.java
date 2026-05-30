@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -21,6 +22,8 @@ public final class ConfigService {
     public HalalBuildsConfig load(FileConfiguration raw) {
         ConfigurationSection limits = raw.getConfigurationSection("limits");
         ConfigurationSection paste = raw.getConfigurationSection("paste");
+        ConfigurationSection preview = raw.getConfigurationSection("preview");
+        ConfigurationSection entities = raw.getConfigurationSection("entities");
         ConfigurationSection foundation = raw.getConfigurationSection("foundation");
         ConfigurationSection protection = raw.getConfigurationSection("protection");
         ConfigurationSection storage = raw.getConfigurationSection("storage");
@@ -47,10 +50,22 @@ public final class ConfigService {
             Math.max(1, getInt(limits, "max-terrain-changes-before-confirm", 10000)),
             Math.max(1, getInt(limits, "max-foundation-depth", 64)),
             PasteMode.fromConfigValue(getString(paste, "default-mode", "smart_foundation")),
-            getBoolean(paste, "paste-air-blocks", true),
+            getBoolean(paste, "paste-air-blocks", false),
             getBoolean(paste, "clear-terrain-above-footprint", true),
             getBoolean(paste, "require-preview-for-large-pastes", true),
             Math.max(5, getInt(paste, "pending-operation-timeout-seconds", 120)),
+            new HalalBuildsConfig.PreviewConfig(
+                getBoolean(preview, "enabled", true),
+                Math.max(1, getInt(preview, "refresh-seconds", 2)),
+                parseParticle(getString(preview, "particle", "END_ROD"), Particle.END_ROD),
+                getBoolean(preview, "show-corners", true),
+                getBoolean(preview, "show-height-pillars", true),
+                getBoolean(preview, "show-facing-arrow", true)
+            ),
+            new HalalBuildsConfig.EntityConfig(
+                getBoolean(entities, "save-entities", true),
+                getBoolean(entities, "paste-entities", true)
+            ),
             foundationMaterial,
             getBoolean(foundation, "fill-under-footprint", true),
             getBoolean(foundation, "only-fill-under-non-air-blocks", true),
@@ -89,6 +104,18 @@ public final class ConfigService {
         return material;
     }
 
+    private Particle parseParticle(String name, Particle fallback) {
+        if (name == null || name.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Particle.valueOf(name.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            logger.warning("Unknown particle in config: " + name + ". Using " + fallback + " instead.");
+            return fallback;
+        }
+    }
+
     private static int getInt(ConfigurationSection section, String path, int fallback) {
         return section == null ? fallback : section.getInt(path, fallback);
     }
@@ -108,4 +135,3 @@ public final class ConfigService {
         };
     }
 }
-

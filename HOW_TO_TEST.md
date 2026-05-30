@@ -16,7 +16,7 @@ Required:
 Copy this jar into the server `plugins/` folder:
 
 ```text
-build/libs/HalalBuilds-1.0.1.jar
+build/libs/HalalBuilds-1.1.0.jar
 ```
 
 Start the server.
@@ -134,8 +134,9 @@ Run:
 Expected:
 
 - The build is not pasted yet.
+- A particle outline appears around the pending placement.
 - Chat shows a preview summary.
-- The summary includes source, world, target coordinates, dimensions, rotation, paste mode, clearing count, and foundation count.
+- The summary includes source, world, target coordinates, dimensions, rotation, paste mode, air behavior, entity behavior, skipped air, clearing count, and foundation count.
 
 Confirm:
 
@@ -158,6 +159,21 @@ Cancel test:
 Expected:
 
 - No paste happens after cancel.
+- The particle outline stops refreshing after cancel.
+
+Move test:
+
+```text
+/hb paste test_house --preview
+/hb move forward 3
+/hb move up 1
+/hb confirm
+```
+
+Expected:
+
+- The preview shifts before confirmation.
+- Confirm pastes at the moved target.
 
 ## 6. Rotation Test
 
@@ -174,6 +190,7 @@ First test the separate pending rotation command:
 Expected:
 
 - `/hb rotate 90` updates the pending preview.
+- The visual outline refreshes after rotation.
 - The preview chat now says rotation `90`.
 - `/hb confirm` pastes the rotated build at the same previewed target.
 
@@ -230,6 +247,42 @@ Run:
 Expected:
 
 - The copied selection pastes at the target.
+
+## 7A. Air And Entity Flags
+
+Test ignore-air:
+
+```text
+/hb paste test_house --ignore-air --preview
+/hb confirm
+```
+
+Expected:
+
+- Schematic air does not replace existing blocks.
+
+Test paste-air:
+
+```text
+/hb paste test_house --paste-air --preview
+/hb confirm
+```
+
+Expected:
+
+- Schematic air is allowed to replace existing blocks.
+
+Test entities:
+
+```text
+/hb save entity_test --entities
+/hb paste entity_test --entities --preview
+/hb confirm
+```
+
+Expected:
+
+- Saved entities paste when the schematic contains supported entity data.
 
 ## 8. Cut And Undo Test
 
@@ -421,13 +474,15 @@ Expected:
 
 ## 14. What Counts As Pass
 
-HalalBuilds v1 smoke test passes if:
+HalalBuilds v1.1.0 smoke test passes if:
 
 - Plugin loads with FAWE.
 - `/hb wand` works.
 - Cuboid save works.
 - List and info work.
 - Preview and confirm paste at the same target.
+- Visual preview appears, moves, rotates, and clears.
+- Air/entity flags behave as expected.
 - Rotation works.
 - Clipboard paste works.
 - Cut and undo work on a small test structure.
